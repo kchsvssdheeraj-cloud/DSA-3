@@ -1,0 +1,171 @@
+import java.io.*;
+import java.util.*;
+
+class Article {
+    String title;
+    String author;
+    String date;
+    String content;
+
+    public Article(String title, String author, String date, String content) {
+        this.title = title;
+        this.author = author;
+        this.date = date;
+        this.content = content;
+    }
+
+    public void displayInfo() {
+        System.out.println("Title   : " + title);
+        System.out.println("Author  : " + author);
+        System.out.println("Date    : " + date);
+        System.out.println("Length  : " + content.split("\\s+").length + " words");
+    }
+}
+
+class NaiveSearch {
+
+    public static int countOccurrences(String text, String keyword) {
+        int count = 0;
+        int n = text.length();
+        int m = keyword.length();
+
+        for (int i = 0; i <= n - m; i++) {
+            int j;
+            for (j = 0; j < m; j++) {
+                if (text.charAt(i + j) != keyword.charAt(j)) {
+                    break;
+                }
+            }
+
+            if (j == m) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+}
+
+public class TextHackCorpus {
+
+    private List<Article> corpus = new ArrayList<>();
+
+    public void loadCorpus(String folderPath) throws IOException {
+
+        File folder = new File(folderPath);
+
+        if (!folder.exists() || !folder.isDirectory()) {
+            System.out.println("Folder not found: " + folder.getAbsolutePath());
+            return;
+        }
+
+        File[] files = folder.listFiles();
+
+        if (files == null) {
+            System.out.println("No files found.");
+            return;
+        }
+
+        for (File file : files) {
+
+            if (file.isFile() && file.getName().endsWith(".txt")) {
+
+                BufferedReader br = new BufferedReader(new FileReader(file));
+
+                String title = br.readLine();
+                String author = br.readLine();
+                String date = br.readLine();
+
+                StringBuilder content = new StringBuilder();
+
+                String line;
+
+                while ((line = br.readLine()) != null) {
+                    content.append(line).append(" ");
+                }
+
+                corpus.add(new Article(title, author, date, content.toString()));
+
+                br.close();
+            }
+        }
+    }
+
+    public void displayCorpus() {
+
+        if (corpus.isEmpty()) {
+            System.out.println("No Articles Loaded.");
+            return;
+        }
+
+        for (int i = 0; i < corpus.size(); i++) {
+
+            System.out.println("\nArticle " + (i + 1));
+            corpus.get(i).displayInfo();
+        }
+    }
+
+    public void keywordAnalytics(String keyword) {
+
+        if (corpus.isEmpty()) {
+            System.out.println("No Articles Loaded.");
+            return;
+        }
+
+        System.out.println("\nKeyword Analysis : " + keyword);
+
+        for (int i = 0; i < corpus.size(); i++) {
+
+            Article article = corpus.get(i);
+
+            int count = NaiveSearch.countOccurrences(
+                    article.content.toLowerCase(),
+                    keyword.toLowerCase());
+
+            System.out.println("Article " + (i + 1) + " (" + article.title + ") : " + count + " occurrence(s)");
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
+
+        TextHackCorpus loader = new TextHackCorpus();
+
+        loader.loadCorpus("Articles");
+
+        Scanner sc = new Scanner(System.in);
+
+        while (true) {
+
+            System.out.println("\n====== TextHack Menu ======");
+            System.out.println("1. Display Corpus");
+            System.out.println("2. Keyword Analytics");
+            System.out.println("3. Exit");
+
+            System.out.print("Enter Choice: ");
+
+            int choice = sc.nextInt();
+            sc.nextLine();
+
+            switch (choice) {
+
+                case 1:
+                    loader.displayCorpus();
+                    break;
+
+                case 2:
+                    System.out.print("Enter Keyword: ");
+                    String keyword = sc.nextLine();
+                    loader.keywordAnalytics(keyword);
+                    break;
+
+                case 3:
+                    System.out.println("Exiting...");
+                    sc.close();
+                    return;
+
+                default:
+                    System.out.println("Invalid Choice");
+            }
+        }
+    }
+}
